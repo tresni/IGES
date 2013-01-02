@@ -1,0 +1,17 @@
+{
+   "manifest_version": 2,
+   "background": { "scripts": ["background.js"] },
+   "content_scripts": [ {
+      "js": [ "jquery.js", "script.js" ],
+      "matches": [ "http://www.galagiveaways.com/*", "https://www.galagiveaways.com/*" ]
+   } ],
+   "permissions": [
+      "http://*/*",
+      "https://*/*",
+      "storage"
+   ],
+   "description": "Some tweaks for Gala Giveaways",
+   "key": "Rktn6dvT8PFB0T8AYkWz+yCKRI48VN9OLNyBTPvF8v0=",
+   "name": "Gala Giveaways Enhancement Suite",
+   "version": "1.0"
+}
