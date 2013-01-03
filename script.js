@@ -3,35 +3,6 @@ var my_games_list = {};
 var table = null;
 var page = 1;
 
-(function(DOMParser) {
-    "use strict";
-
-    var DOMParser_proto = DOMParser.prototype,
-        real_parseFromString = DOMParser_proto.parseFromString;
-
-    // Firefox/Opera/IE throw errors on unsupported types
-    try {
-        // WebKit returns null on unsupported types
-        if ((new DOMParser()).parseFromString("", "text/html")) {
-            // text/html parsing is natively supported
-            return;
-        }
-    } catch (ex) {}
-
-    DOMParser_proto.parseFromString = function(markup, type) {
-        if (/^\s*text\/html\s*(?:;|$)/i.test(type)) {
-            var
-              doc = document.implementation.createHTMLDocument("")
-            ;
-
-            doc.body.innerHTML = markup;
-            return doc;
-        } else {
-            return real_parseFromString.apply(this, arguments);
-        }
-    };
-}(DOMParser));
-
 function findTable() {
     return jQuery('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
 }

@@ -2,7 +2,7 @@
    "manifest_version": 2,
    "background": { "scripts": ["background.js"] },
    "content_scripts": [ {
-      "js": [ "jquery.js", "script.js" ],
+      "js": [ "DOMParser.js", "jquery.js", "script.js" ],
       "matches": [ "http://www.galagiveaways.com/*", "https://www.galagiveaways.com/*" ]
    } ],
    "permissions": [
