@@ -3,8 +3,20 @@ var my_games_list = {};
 var table = null;
 var page = 1;
 
-function findTable() {
-    return jQuery('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
+function rearrangeTable(table, elements, desired_count, detach) {
+    elements.each(function() {
+        if (detach) {
+            $(this).detach();
+        }
+        var row = $("> tbody > tr", table).filter(function() {
+            return $(this).children("td").length < desired_count;
+        }).first();
+
+        if (row.length === 0) {
+            row = $("<tr>").appendTo(table);
+        }
+        row.append($(this));
+    });
 }
 
 function cleanUp(doc) {
@@ -19,20 +31,8 @@ function cleanUp(doc) {
 }
 
 function lineUp(doc) {
-    links = jQuery('a[href^="http://store.steampowered.com/app/"]', doc);
-    links.closest("td:not(.clean)").each(function() {
-        $(this).detach();
-        var row = $("> tbody > tr", table).filter(function() {
-            return $(this).children("td").length < 4;
-        }).first();
-
-        if (row.length === 0) {
-            row = $("<tr>").appendTo(table);
-        }
-
-        row.append($(this));
-        $(this).addClass("clean");
-    }).addClass("clean");
+    links = $('a[href^="http://store.steampowered.com/app/"]', doc);
+    rearrangeTable(table, links.closest("td"), 4, true);
 }
 
 function getNextPage() {
@@ -68,5 +68,17 @@ function main(settings) {
                 getNextPage();
             }
         };
+    }
+
+    if (/^\/profile/.test(window.location.pathname)) {
+        var GA = $('a[href^="/GA/"]').closest("td");
+        pTable = GA.closest("table");
+
+        GA.filter(function() {
+            return (/status: Lost/).test(this.innerText);
+        }).css('opacity', 0.3).addClass('lost').detach();
+
+        rearrangeTable(pTable, GA.filter(':not(.lost)'), 4, true);
+        rearrangeTable(pTable, GA.filter('.lost'), 4, false);
     }
 }
