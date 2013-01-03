@@ -8,7 +8,7 @@ function findTable() {
 }
 
 function cleanUp(doc) {
-    var links = jQuery('a[href^="http://store.steampowered.com/app/"]:not(.clean)', doc);
+    var links = $('a[href^="http://store.steampowered.com/app/"]:not(.clean)', doc);
 
     links.each(function(){
         id = /\d+/.exec($(this).attr("href"));
@@ -38,7 +38,7 @@ function lineUp(doc) {
 function getNextPage() {
     page += 1;
     console.log("Getting page " + page);
-    jQuery.get("http://www.galagiveaways.com/home/" + page, function(data) {
+    $.get("http://www.galagiveaways.com/home/" + page, function(data) {
         console.log("Retrived " + this);
         var parser = new DOMParser();
         var doc = parser.parseFromString(data, "text/html");
@@ -59,7 +59,7 @@ function main(settings) {
 
     if (/^\/home/.test(window.location.pathname)) {
         // Store the table we are about to fuck up
-        table = findTable();
+        table = $('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
         cleanUp(document);
         lineUp(document);
 
