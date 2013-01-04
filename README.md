@@ -8,13 +8,17 @@ Fixes profiles by sorting lost games to the bottom.  Makes the images in profile
 
 Quick access dynamically adjusts itself as you enter/leave giveaways.
 
+Highlights games on your wishlist in the Giveaways view
+
+Header scrolls with you as you move through infinite scroll.
+
+Hyperlink URLs in the forums.
+
 ## Todo
 
-* Highlight games on your wishlist
 * Show compatible OS (for Mac Users like me)
 * Show info on mouse over such as list of giveaways
 * Extend profile to show when giveaways are ending
-* Extend profile to show won more prominently (haven't won anything yet...)
 * Quick access actions should adjust the page with the new information
 
 Suggestions welcome.
