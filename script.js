@@ -191,18 +191,21 @@ function main(settings) {
     }
     else if (/^\/profile/.test(window.location.pathname)) {
         var GA = $('a[href^="/GA/"]').closest("td");
-        pTable = GA.closest("table");
-
         GA.filter(function() {
             return (/status: Lost/).test(this.innerText);
-        }).css('opacity', 0.3).addClass('lost').detach();
+        }).css('opacity', 0.3).addClass('lost');//.detach();
+        GA.filter(function() {
+            return (/status: Won/).test(this.innerText);
+        }).addClass('won');
 
-        rearrangeTable(pTable, GA.filter(':not(.lost)'), 4, true);
-        rearrangeTable(pTable, GA.filter('.lost'), 4, false);
+        rearrangeTable(GA.filter(':not(.lost,.won)').closest("table"), GA.filter(':not(.lost,.won)'), 4, true);
+        rearrangeTable(GA.filter('.lost').closest("table"), GA.filter('.lost'), 4, true);
+        rearrangeTable(GA.filter('.won').closest("table"), GA.filter('.won'), 4, true);
 
-        $('img[src^="http://cdn.steampowered.com"]').click(function(){
+        $('img', GA).click(function(event){
+            event.preventDefault();
             quickView();
-            $.get($(this).siblings("a").attr("href"), quickLook);
-        }).css({cursor: "pointer"});
+            $.get($(this).closest("a").attr("href"), quickLook);
+        });
     }
 }
