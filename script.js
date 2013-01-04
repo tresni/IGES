@@ -208,4 +208,10 @@ function main(settings) {
             $.get($(this).closest("a").attr("href"), quickLook);
         });
     }
+    else if (/^\/topic\/[a-f0-9]+/.test(window.location.pathname)) {
+        $('.tabella-forum:not(:first) tr:nth-child(2) td:last-child, .tabella-forum tr:nth-child(3) td:last')
+            .each(function() {
+                $(this).html($(this).html().replace(/(\S+:\/\/\S+)/g, "<u><a href='$1'>$1</a></u>"));
+            });
+    }
 }
