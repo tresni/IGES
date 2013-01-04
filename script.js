@@ -248,6 +248,13 @@ function main() {
         }, true);
     });
 
+    $(window).resize(function() {
+        icon.css({
+            top: $(window).innerHeight() - 21,
+            left: $(window).innerWidth() - 21
+        });
+    });
+
     if (/^\/home/.test(window.location.pathname)) {
         // Store the table we are about to fuck up
         table = $('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
