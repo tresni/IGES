@@ -255,6 +255,24 @@ function main() {
         });
     });
 
+    $("<div id='iges_header'>").css({
+        width: "100%",
+        position: "fixed",
+        backgroundImage: "url(http://1-ps.googleusercontent.com/x/s.galagive.appspot.com/www.galagiveaways.com/img/xslate.jpg.pagespeed.ic.K9-NSGsDLG.jpg)",
+        top: 0,
+        left: 0
+    }).hide().appendTo("body");
+    
+    $(window).scroll(function(event) {
+        if (window.pageYOffset >= 1) {
+            $("div#iges_header").append($("table.header")).show();
+        }
+        else {
+            $("table.header").prependTo("body");
+            $("div#iges_header").hide();
+        }
+    });
+
     if (/^\/home/.test(window.location.pathname)) {
         // Store the table we are about to fuck up
         table = $('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
