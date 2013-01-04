@@ -1,9 +1,59 @@
 var parser = new DOMParser();
 var my_games_list = {};
+var my_wishlist = {};
+var my_steam_name = null;
 var table = null;
 var page = 1;
 
-chrome.extension.sendRequest({method: "getGames"}, main);
+function getGames(callback) {
+    chrome.extension.sendRequest({method: "getGames"}, function(settings) {
+        games = settings.games;
+        if ( games === undefined ) {
+            games = {};
+        }
+
+        for (var i = 0; i < games.length; i++) {
+            my_games_list[games[i].id] = true;
+        }
+
+        if (typeof callback == "function") {
+            callback();
+        }
+    });
+}
+
+function getWishlist(callback) {
+    chrome.extension.sendRequest({method: "updateWishlist"}, function(settings) {
+        wishlist = settings.wishlist;
+        if (wishlist === undefined) {
+            wishlist = {};
+        }
+
+        for (var i = 0; i < wishlist.length; i++) {
+            my_wishlist[wishlist[i].id] = true;
+        }
+
+        if (typeof callback == "function") {
+            callback();
+        }
+    });
+}
+
+function getUser(callback) {
+    chrome.extension.sendRequest({method: "getSteamName"}, function(settings) {
+        my_steam_name = settings.user;
+        if (typeof callback == "function") {
+            callback();
+        }
+    });
+}
+
+getUser(function() {
+    getWishlist(function() {
+        getGames(main);
+    });
+});
+
 $("head").append('<link href="//netdna.bootstrapcdn.com/font-awesome/3.0/css/font-awesome.css" rel="stylesheet">');
 
 function rearrangeTable(table, elements, desired_count, detach) {
@@ -38,8 +88,19 @@ function cleanUp(doc) {
 }
 
 function lineUp(doc) {
-    links = $('a[href^="http://store.steampowered.com/app/"]', doc);
+    var links = $('a[href^="http://store.steampowered.com/app/"]', doc);
     rearrangeTable(table, links.closest("td"), 4, true);
+}
+
+function showWishlist(doc) {
+    var hilite = chrome.extension.getURL("wishlist.png");
+    var links = $('a[href^="http://store.steampowered.com/app/"]', doc);
+    links.each(function (){
+        id = /\d+/.exec($(this).attr("href"));
+        if (id in my_wishlist) {
+            console.log($("img", this).attr("src", hilite));
+        }
+    });
 }
 
 function quickView(content) {
@@ -67,16 +128,15 @@ function quickView(content) {
             left: "50%",
             width: "297px",
             height: "136px",
-            lineHeight: "136px",
             marginLeft: "-149px",
             marginTop: "-68px",
             textAlign: "center",
             zIndex: 100
-        }).append($('<i class="icon-spinner icon-spin icon-4x"></i>').css("vertical-align", "middle"));
+        }).append($('<i class="icon-spinner icon-spin icon-4x"></i>'));
     }
 
     if (content !== undefined) {
-        $("div.quickview.content").removeClass("tabella-forum").css("lineHeight", "inherit").empty().append(content).css({
+        $("div.quickview.content").removeClass("tabella-forum").empty().append(content).css({
             width: $(content).width(),
             height: $(content).height(),
             marginLeft: -($(content).width() / 2),
@@ -141,47 +201,59 @@ function nextPageCheck() {
     }
 }
 
+function cleanGameList(doc) {
+    if (hasLinks(doc)) {
+        cleanUp(doc);
+        showWishlist(doc);
+        // this needs to be the last line as it attachs stuff to the actual view
+        lineUp(doc);
+        quickEnter();
+        window.onscroll = nextPageCheck;
+        $('a[href^="http://store.steampowered.com/app/"]').attr("target", "_blank");
+    }
+}
+
 function getNextPage() {
     window.onscroll = null;
     page += 1;
-    td = $("<td>").css({
+    td = $("<td class='spinner'>").css({
             verticalAlign: "middle",
             textAlign: "center"
         }).append($('<i class="icon-spinner icon-spin icon-4x"></i>'));
     rearrangeTable(table, td, 4, false);
 
     $.get("http://www.galagiveaways.com/home/" + page, function(data) {
-        var doc = parser.parseFromString(data, "text/html");
-        td.remove();
-        if (hasLinks(doc)) {
-            cleanUp(doc);
-            lineUp(doc);
-            quickEnter();
-            window.onscroll = nextPageCheck;
-        }
-        $('a[href^="http://store.steampowered.com/app/"]').attr("target", "_blank");
+        $('td.spinner').remove();
+        cleanGameList(parser.parseFromString(data, "text/html"));
     });
 }
 
-function main(settings) {
-    games = settings.games;
-    if ( games === undefined ) {
-        games = {};
-    }
+function main() {
+    var icon = $("<i class='icon-repeat'></i>").appendTo("body");
 
-    for (var i = 0; i < games.length; i++) {
-        my_games_list[games[i].id] = true;
-    }
+    icon.css({
+        position: "fixed",
+        top: $("body").innerHeight() - icon.height() - 5,
+        left: $("body").innerWidth() - icon.width() - 5
+    }).click(function(event){
+        if ($(this).hasClass("icon-spin")) return;
+        $(this).addClass('icon-spin');
+        getUser(function() {
+            getWishlist(function() {
+                getGames(function() {
+                    $(icon).removeClass('icon-spin');
+                    if (/^\/home/.test(window.location.pathname)) {
+                        cleanGameList(document);
+                    }
+                });
+            });
+        });
+    });
 
     if (/^\/home/.test(window.location.pathname)) {
         // Store the table we are about to fuck up
         table = $('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
-        cleanUp(document);
-        lineUp(document);
-        quickEnter();
-        $('a[href^="http://store.steampowered.com/app/"]').attr("target", "_blank");
-
-        window.onscroll = nextPageCheck;
+        cleanGameList(document);
     }
     else if (/^\/games\/\d+/.test(window.location.pathname)) {
         quickEnter();

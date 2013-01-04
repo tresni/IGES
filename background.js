@@ -1,76 +1,96 @@
 var storage = chrome.storage.local;
 var settings = null;
-var init = false;
 
-storage.get(["SteamGames", "SteamUser"], function(s) {
+storage.get(["SteamGames", "SteamUser", "SteamWishlist"], function(s) {
     settings = s;
 });
 
-function makeRequest(url, method, callback) {
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = callback;
-    req.open(method, url, true);
-    req.send(null);
-}
-
-function getSteamIdFromGala(callback) {
-    makeRequest("http://www.galagiveaways.com/profile", "GET",
-        function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var user = /http:\/\/steamcommunity.com\/id\/([^\/]+)/.exec(this.responseText);
-                if (user === null || user.length === 0) {
-                    console.log("no user :(");
-                    settings.SteamUser = null;
-                    storage.remove("SteamUser");
-                } else {
-                    console.log("Steam user: " + user[1]);
-                    storage.set({SteamUser: user[1]});
-                    settings.SteamUser = user[1];
-                }
-                callback({user: settings.SteamUser});
-            }
-        });
-}
-
-function requestGamesFromSteam(callback) {
-    console.log("Requesting games from Steam");
-    makeRequest(
-        "http://steamcommunity.com/id/" + settings.SteamUser + "/games?tab=all&xml=1",
-        "GET",
-        function() {
-            if (this.readyState == 4 && this.status == 200) {
-                gamesXML = this.responseXML.getElementsByTagName("game");
-                games = [];
-                for (var idx = 0; idx < gamesXML.length; idx++) {
-                    games.push({
-                        id: gamesXML[idx].getElementsByTagName("appID")[0].childNodes[0].nodeValue,
-                        name: gamesXML[idx].getElementsByTagName("name")[0].childNodes[0].nodeValue
-                    });
-                }
-                console.log("Got the following games", games);
-                storage.set({ SteamGames: games});
-                callback({games: games});
-            }
-        }
-    );
-}
-
-function getGamesFromSteam(callback) {
+function getSomethingFromSteam(steamCallback, fullCallback) {
     if ("SteamUser" in settings && settings.SteamUser !== null) {
         console.log("Using username: " + settings.SteamUser);
-        requestGamesFromSteam(callback);
+        steamCallback(fullCallback);
     }
     else {
         console.log("Fetching username...");
         getSteamIdFromGala(function(){
             if (settings.SteamUser !== null) {
-                requestGamesFromSteam(callback);
+                steamCallback(fullCallback);
             }
             else {
-                callback({});
+                fullCallback({});
             }
         });
     }
+}
+
+function getWishlistFromSteam(callback) {
+    getSomethingFromSteam(requestWishlistFromSteam, callback);
+}
+
+function getGamesFromSteam(callback) {
+    getSomethingFromSteam(requestGamesFromSteam, callback);
+}
+
+function requestWishlistFromSteam(callback) {
+    console.log("Requesting wishlist from Steam");
+    $.get(
+        "http://steamcommunity.com/id/" + settings.SteamUser + "/wishlist?xml=1",
+        function(data) {
+            games = [];
+            $(".wishlistRow .gameLogo a[href^='http://steamcommunity.com/app/']", data).each(function() {
+                games.push({
+                    id: /\d+$/.exec($(this).attr("href")),
+                    name: $(this).closest(".wishlistRow").find("h4").text()
+                });
+            });
+            console.log("Got a bunch of wishlist items", games.length);
+            storage.set({SteamWishlist: games});
+            callback({wishlist: games});
+        }
+    ).error(function() {
+        callback({wishlist: []});
+    });
+}
+
+function requestGamesFromSteam(callback) {
+    console.log("Requesting games from Steam");
+    $.get(
+        "http://steamcommunity.com/id/" + settings.SteamUser + "/games?tab=all&xml=1",
+        function(data) {
+            games = [];
+            $("game", data).each(function() {
+                games.push({
+                    id: $("appID", this).text(),
+                    name: $("name", this).text()
+                });
+            });
+            console.log("Got a bunch of games", games.length);
+            storage.set({SteamGames: games});
+            callback({games: games});
+        }
+    ).error(function() {
+        callback({games: []});
+    });
+}
+
+function getSteamIdFromGala(callback) {
+    $.get("http://www.galagiveaways.com/profile",
+        function(data) {
+            var user = /http:\/\/steamcommunity.com\/id\/([^\/]+)/.exec(data);
+            if (user === null || user.length === 0) {
+                console.log("no user :(");
+                settings.SteamUser = null;
+                storage.remove("SteamUser");
+            } else {
+                console.log("Steam user: " + user[1]);
+                storage.set({SteamUser: user[1]});
+                settings.SteamUser = user[1];
+            }
+            callback({user: settings.SteamUser});
+        }
+    ).error(function() {
+        callback({user: null});
+    });
 }
 
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
@@ -83,7 +103,19 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
             getGamesFromSteam(sendResponse);
         }
     }
+    if (request.method == "getSteamName") {
+        if ("SteamUser" in settings) {
+            console.log("Using cached username");
+            sendResponse({user: settings.SteamUser});
+        }
+        else {
+            getSteamIdFromGala(sendResponse);
+        }
+    }
     else if (request.method == "updateGames") {
         getGamesFromSteam(sendResponse);
+    }
+    else if(request.method == "updateWishlist") {
+        getWishlistFromSteam(sendResponse);
     }
 });
