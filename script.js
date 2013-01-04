@@ -90,10 +90,7 @@ function handleGiveawayForm(event) {
     $("#resp_message").remove();
     event.preventDefault();
     var form = event.target;
-    $.post($(this).attr("action"), {
-        giveawayId: $(this).find("#giveawayId").val(),
-        giveawayOp: $(this).find("#giveawayOp").val()
-    }, function(data) {
+    $.post($(this).attr("action"), $(this).serialize(), function(data) {
         var resp = parser.parseFromString(data, "text/html");
         var respMsg = $("table ~ script", resp)[0].nextSibling.textContent;
         var div = $("<div id='resp_message'>").text(respMsg);
