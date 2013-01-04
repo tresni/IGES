@@ -5,8 +5,8 @@ var my_steam_name = null;
 var table = null;
 var page = 1;
 
-function getGames(callback) {
-    chrome.extension.sendRequest({method: "getGames"}, function(settings) {
+function getGames(callback, forceupdate) {
+    chrome.extension.sendRequest({method: (forceupdate === true) ? "updateGames" : "getGames"}, function(settings) {
         games = settings.games;
         if ( games === undefined ) {
             games = {};
@@ -22,8 +22,8 @@ function getGames(callback) {
     });
 }
 
-function getWishlist(callback) {
-    chrome.extension.sendRequest({method: "updateWishlist"}, function(settings) {
+function getWishlist(callback, forceupdate) {
+    chrome.extension.sendRequest({method: (forceupdate === true) ? "updateWishlist" : "getWishlist"}, function(settings) {
         wishlist = settings.wishlist;
         if (wishlist === undefined) {
             wishlist = {};
@@ -98,7 +98,7 @@ function showWishlist(doc) {
     links.each(function (){
         id = /\d+/.exec($(this).attr("href"));
         if (id in my_wishlist) {
-            console.log($("img", this).attr("src", hilite));
+            $("img", this).attr("src", hilite);
         }
     });
 }
@@ -233,21 +233,19 @@ function main() {
 
     icon.css({
         position: "fixed",
-        top: $("body").innerHeight() - icon.height() - 5,
-        left: $("body").innerWidth() - icon.width() - 5
+        top: $(window).innerHeight() - 21,
+        left: $(window).innerWidth() - 21
     }).click(function(event){
         if ($(this).hasClass("icon-spin")) return;
         $(this).addClass('icon-spin');
-        getUser(function() {
+        getGames(function() {
             getWishlist(function() {
-                getGames(function() {
-                    $(icon).removeClass('icon-spin');
-                    if (/^\/home/.test(window.location.pathname)) {
-                        cleanGameList(document);
-                    }
-                });
-            });
-        });
+                $(icon).removeClass('icon-spin');
+                if (/^\/home/.test(window.location.pathname)) {
+                    cleanGameList(document);
+                }
+            }, true);
+        }, true);
     });
 
     if (/^\/home/.test(window.location.pathname)) {

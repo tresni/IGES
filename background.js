@@ -112,6 +112,15 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
             getSteamIdFromGala(sendResponse);
         }
     }
+    else if (request.method == "getWishlist") {
+        if ("SteamWishlist" in settings) {
+            console.log("Using cached wishlist");
+            sendResponse({games: settings.SteamWishlist});
+        }
+        else {
+            getWishlistFromSteam(sendResponse);
+        }
+    }
     else if (request.method == "updateGames") {
         getGamesFromSteam(sendResponse);
     }
