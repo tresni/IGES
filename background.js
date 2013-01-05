@@ -39,7 +39,7 @@ function requestWishlistFromSteam(callback) {
             games = [];
             $(".wishlistRow .gameLogo a[href^='http://steamcommunity.com/app/']", data).each(function() {
                 games.push({
-                    id: /\d+$/.exec($(this).attr("href")),
+                    id: /\d+$/.exec($(this).attr("href"))[0],
                     name: $(this).closest(".wishlistRow").find("h4").text()
                 });
             });
@@ -115,7 +115,7 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     else if (request.method == "getWishlist") {
         if ("SteamWishlist" in settings) {
             console.log("Using cached wishlist");
-            sendResponse({games: settings.SteamWishlist});
+            sendResponse({wishlist: settings.SteamWishlist});
         }
         else {
             getWishlistFromSteam(sendResponse);

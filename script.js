@@ -4,6 +4,7 @@ var my_wishlist = {};
 var my_steam_name = null;
 var table = null;
 var page = 1;
+var shouldScroll = true;
 
 function getGames(callback, forceupdate) {
     chrome.extension.sendRequest({method: (forceupdate === true) ? "updateGames" : "getGames"}, function(settings) {
@@ -25,6 +26,7 @@ function getGames(callback, forceupdate) {
 function getWishlist(callback, forceupdate) {
     chrome.extension.sendRequest({method: (forceupdate === true) ? "updateWishlist" : "getWishlist"}, function(settings) {
         wishlist = settings.wishlist;
+
         if (wishlist === undefined) {
             wishlist = {};
         }
@@ -72,32 +74,43 @@ function rearrangeTable(table, elements, desired_count, detach) {
     });
 }
 
+
+function getLinks(doc) {
+    return $('td:not(.tabella-features1, tabella-features2) > a[href^="/GA/"]:has(img)', doc);
+}
+
+function getIdFromLink(elem) {
+    td = $(elem).closest("td");
+    var match = (/(?:apps|subs)\/(\d+)/).exec(td.attr("style"));
+    return match[1];
+}
+
+
 function hasLinks(doc) {
-    return $('a[href^="http://store.steampowered.com/app/"]').length > 0;
+    return getLinks(doc).length > 0;
 }
 
 function cleanUp(doc) {
-    var links = $('a[href^="http://store.steampowered.com/app/"]', doc);
+    var links = getLinks(doc);
 
     links.each(function(){
-        id = /\d+/.exec($(this).attr("href"));
-        if (id in my_games_list) {
-           $(this).closest("td").remove();
+        if (getIdFromLink(this) in my_games_list) {
+            $(this).closest("td").remove();
         }
     });
 }
 
 function lineUp(doc) {
-    var links = $('a[href^="http://store.steampowered.com/app/"]', doc);
+    var links = getLinks(doc);
     rearrangeTable(table, links.closest("td"), 4, true);
 }
 
 function showWishlist(doc) {
     var hilite = chrome.extension.getURL("wishlist.png");
-    var links = $('a[href^="http://store.steampowered.com/app/"]', doc);
+    var links = getLinks(doc);
+
     links.each(function (){
-        id = /\d+/.exec($(this).attr("href"));
-        if (id in my_wishlist) {
+        if (getIdFromLink(this) in my_wishlist) {
             $("img", this).attr("src", hilite);
         }
     });
@@ -120,8 +133,8 @@ function quickView(content) {
         });
     }
     
-    if ($("div.quickview.content").length === 0) {
-        $("<div>").addClass("quickview content tabella-forum").appendTo("body").css({
+    if ($("div.quickview.waiting").length === 0) {
+        $("<div>").addClass("quickview waiting tabella-forum").appendTo("body").css({
             opacity: 1,
             position: "fixed",
             top: "50%",
@@ -132,17 +145,38 @@ function quickView(content) {
             marginTop: "-68px",
             textAlign: "center",
             zIndex: 100
-        }).append($('<i class="icon-spinner icon-spin icon-4x"></i>'));
+        }).append($('<i class="icon-spinner icon-spin icon-4x"></i>')).hide();
     }
 
+    if ($("div.quickview.content").length === 0) {
+        $("<div>").addClass("quickview content").appendTo("body").css({
+            opacity: 1,
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            textAlign: "center",
+            zIndex: 100
+        }).hide();
+    }
+
+    $("div.quickview.overlay").show();
     if (content !== undefined) {
-        $("div.quickview.content").removeClass("tabella-forum").empty().append(content).css({
+        handleSteamLinks(content);
+        $("div.quickview.waiting").hide();
+        $("div.quickview.content").show().empty().append(content).css({
             width: $(content).width(),
             height: $(content).height(),
             marginLeft: -($(content).width() / 2),
             marginTop: -($(content).height() / 2)
         });
+    } else {
+        $("div.quickview.waiting").show();
+        $("div.quickview.content").hide();
     }
+}
+
+function handleSteamLinks(doc) {
+    $('a[href^="http://store.steampowered.com/app/"]', doc).attr("target", "_blank");
 }
 
 function handleGiveawayForm(event) {
@@ -180,42 +214,58 @@ function quickLook(data) {
     else {
         // Otherwise grab the info and the winner's list
         _table = $('table.tabella-forum:first, table.tabella-forum:last', doc);
-        console.log(_table);
+        if ($(_table).length === 0) {
+            _table = $('a[href^="/GA/"]', doc).closest('table:not(.riga3,.riga)').addClass("tabella-forum").css({
+                padding: 5
+            });
+            if ($(_table).length !== 0) {
+                quickEnter(_table);
+            }
+        }
     }
     quickView(_table);
 }
 
-function quickEnter() {
-    entry = $('a[href^="/GA/"]:has(b > u):not(.quick)').addClass('quick');
+function quickEnter(doc) {
+    entry = $('a[href^="/GA/"]:has(b > u):not(.quick)', doc).addClass('quick');
+
+    td = $("<td>").css({
+        textAlign: "center"
+    }).appendTo($(entry).closest("tr").prev("tr"));
+
+    $('<i class="icon-info-sign"></i>').click(function(event) {
+        event.preventDefault();
+        window.open("http://store.steampowered.com/app/" + getIdFromLink($(this).closest(".riga")));
+    }).append("&nbsp;").appendTo(td);
+
+    $('<i class="icon-search"></i>').click(function(){
+        event.preventDefault();
+        quickView();
+        $.get("http://www.galagiveaways.com/games/" + getIdFromLink($(this).closest(".riga")), quickLook);
+    }).append("&nbsp;").appendTo(td);
 
     $('<i class="icon-bolt"></i>').click(function(event) {
         event.preventDefault();
         quickView();
-        $.get($(this).closest("a").attr("href"), quickLook);
-    }).appendTo($("b", entry).append("&nbsp;"));
-}
-
-function nextPageCheck() {
-    if (window.innerHeight + window.pageYOffset == document.height) {
-        getNextPage();
-    }
+        $.get($(this).closest("tr").next("tr").find("a").attr("href"), quickLook);
+    }).appendTo(td);
 }
 
 function cleanGameList(doc) {
     if (hasLinks(doc)) {
         cleanUp(doc);
         showWishlist(doc);
+        handleSteamLinks(doc);
+        quickEnter(doc);
         // this needs to be the last line as it attachs stuff to the actual view
         lineUp(doc);
-        quickEnter();
-        window.onscroll = nextPageCheck;
-        $('a[href^="http://store.steampowered.com/app/"]').attr("target", "_blank");
+        shouldScroll = true;
     }
 }
 
 function getNextPage() {
-    window.onscroll = null;
     page += 1;
+    shouldScroll = false;
     td = $("<td class='spinner'>").css({
             verticalAlign: "middle",
             textAlign: "center"
@@ -268,18 +318,23 @@ function main() {
             $("div#iges_header").append($("table.header")).show();
         }
         else {
+            if (shouldScroll)
             $("table.header").prependTo("body");
             $("div#iges_header").hide();
+        }
+
+        if (window.innerHeight + window.pageYOffset >= document.height && shouldScroll) {
+            getNextPage();
         }
     });
 
     if (/^\/home/.test(window.location.pathname)) {
         // Store the table we are about to fuck up
-        table = $('a[href^="http://store.steampowered.com/app/"]:last').closest("table");
+        table = getLinks(document).closest("table");
         cleanGameList(document);
     }
     else if (/^\/games\/\d+/.test(window.location.pathname)) {
-        quickEnter();
+        quickEnter(document);
     }
     else if (/^\/profile/.test(window.location.pathname)) {
         var GA = $('a[href^="/GA/"]').closest("td");

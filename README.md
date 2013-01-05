@@ -23,6 +23,15 @@ Hyperlink URLs in the forums.
 
 Suggestions welcome.
 
+## Changelog
+
+* 4 JAN 2013
+    * Update for formatting changes
+    * Move quick view to before the link to avoid weird click areas
+    * Fix Wishlist highlighting
+    * Merge onscroll behaviors into 1 function
+    * Links to Steam from QuickView now launch in new tab/window
+
 ## Projects I am utilizing
 
 * [jQuery](http://jquery.com)
