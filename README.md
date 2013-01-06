@@ -25,6 +25,9 @@ Suggestions welcome.
 
 ## Changelog
 
+* 6 JAN 2013
+    * Fixes profile page incorrectly moving created Giveaways into Open Giveaways list
+
 * 4 JAN 2013
     * Update for formatting changes
     * Move quick view to before the link to avoid weird click areas
