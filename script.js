@@ -337,19 +337,7 @@ function main() {
         quickEnter(document);
     }
     else if (/^\/profile/.test(window.location.pathname)) {
-        var GA = $('a[href^="/GA/"]').closest("td");
-        GA.filter(function() {
-            return (/status: Lost/).test(this.innerText);
-        }).css('opacity', 0.3).addClass('lost');//.detach();
-        GA.filter(function() {
-            return (/status: Won/).test(this.innerText);
-        }).addClass('won');
-
-        rearrangeTable(GA.filter(':not(.lost,.won)').closest("table"), GA.filter(':not(.lost,.won)'), 4, true);
-        rearrangeTable(GA.filter('.lost').closest("table"), GA.filter('.lost'), 4, true);
-        rearrangeTable(GA.filter('.won').closest("table"), GA.filter('.won'), 4, true);
-
-        $('img', GA).click(function(event){
+        $('a[href^="/GA/"] img').click(function(event){
             event.preventDefault();
             quickView();
             $.get($(this).closest("a").attr("href"), quickLook);
