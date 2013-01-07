@@ -1,8 +1,8 @@
 {
    "manifest_version": 2,
-   "background": { "scripts": ["jquery.js", "background.js"] },
+   "background": { "scripts": ["js/jquery.js", "js/Settings.js", "js/background.js"] },
    "content_scripts": [ {
-      "js": [ "DOMParser.js", "jquery.js", "script.js" ],
+      "js": [ "js/DOMParser.js", "js/jquery.js", "js/content.js" ],
       "matches": [ "http://www.galagiveaways.com/*", "https://www.galagiveaways.com/*" ]
    } ],
    "permissions": [
@@ -13,6 +13,7 @@
    "web_accessible_resources": [
       "wishlist.png"
    ],
+   "options_page": "options.html",
    "description": "Some tweaks for Gala Giveaways",
    "key": "Rktn6dvT8PFB0T8AYkWz+yCKRI48VN9OLNyBTPvF8v0=",
    "name": "Gala Giveaways Enhancement Suite",

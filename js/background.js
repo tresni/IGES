@@ -1,19 +1,12 @@
-var storage = chrome.storage.local;
-var settings = null;
-
-storage.get(["SteamGames", "SteamUser", "SteamWishlist"], function(s) {
-    settings = s;
-});
-
 function getSomethingFromSteam(steamCallback, fullCallback) {
-    if ("SteamUser" in settings && settings.SteamUser !== null) {
-        console.log("Using username: " + settings.SteamUser);
+    if (Settings.has("SteamUser")) {
+        console.log("Using username: " + Settings.get('SteamUser'));
         steamCallback(fullCallback);
     }
     else {
         console.log("Fetching username...");
         getSteamIdFromGala(function(){
-            if (settings.SteamUser !== null) {
+            if (Settings.get('SteamUser') !== null) {
                 steamCallback(fullCallback);
             }
             else {
@@ -34,7 +27,7 @@ function getGamesFromSteam(callback) {
 function requestWishlistFromSteam(callback) {
     console.log("Requesting wishlist from Steam");
     $.get(
-        "http://steamcommunity.com/id/" + settings.SteamUser + "/wishlist?xml=1",
+        "http://steamcommunity.com/id/" + Settings.get('SteamUser') + "/wishlist?xml=1",
         function(data) {
             games = [];
             $(".wishlistRow .gameLogo a[href^='http://steamcommunity.com/app/']", data).each(function() {
@@ -44,7 +37,7 @@ function requestWishlistFromSteam(callback) {
                 });
             });
             console.log("Got a bunch of wishlist items", games.length);
-            storage.set({SteamWishlist: games});
+            Settings.set('SteamWishlist', games);
             callback({wishlist: games});
         }
     ).error(function() {
@@ -55,7 +48,7 @@ function requestWishlistFromSteam(callback) {
 function requestGamesFromSteam(callback) {
     console.log("Requesting games from Steam");
     $.get(
-        "http://steamcommunity.com/id/" + settings.SteamUser + "/games?tab=all&xml=1",
+        "http://steamcommunity.com/id/" + Settings.get('SteamUser') + "/games?tab=all&xml=1",
         function(data) {
             games = [];
             $("game", data).each(function() {
@@ -65,7 +58,7 @@ function requestGamesFromSteam(callback) {
                 });
             });
             console.log("Got a bunch of games", games.length);
-            storage.set({SteamGames: games});
+            Settings.set('SteamGames', games);
             callback({games: games});
         }
     ).error(function() {
@@ -79,14 +72,12 @@ function getSteamIdFromGala(callback) {
             var user = /http:\/\/steamcommunity.com\/id\/([^\/]+)/.exec(data);
             if (user === null || user.length === 0) {
                 console.log("no user :(");
-                settings.SteamUser = null;
-                storage.remove("SteamUser");
+                Settings.del('SteamUser');
             } else {
                 console.log("Steam user: " + user[1]);
-                storage.set({SteamUser: user[1]});
-                settings.SteamUser = user[1];
+                Settings.set('SteamUser', user[1]);
             }
-            callback({user: settings.SteamUser});
+            callback({user: Settings.get('SteamUser')});
         }
     ).error(function() {
         callback({user: null});
@@ -95,31 +86,34 @@ function getSteamIdFromGala(callback) {
 
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     if (request.method == "getGames") {
-        if ("SteamGames" in settings) {
+        if (Settings.has('SteamGames')) {
             console.log("Using cached games");
-            sendResponse({games: settings.SteamGames});
+            sendResponse({games: Settings.get('SteamGames')});
         }
         else {
             getGamesFromSteam(sendResponse);
         }
     }
     if (request.method == "getSteamName") {
-        if ("SteamUser" in settings) {
+        if (Settings.has('SteamUser')) {
             console.log("Using cached username");
-            sendResponse({user: settings.SteamUser});
+            sendResponse({user: Settings.get('SteamUser')});
         }
         else {
             getSteamIdFromGala(sendResponse);
         }
     }
     else if (request.method == "getWishlist") {
-        if ("SteamWishlist" in settings) {
+        if (Settings.has('SteamWishlist')) {
             console.log("Using cached wishlist");
-            sendResponse({wishlist: settings.SteamWishlist});
+            sendResponse({wishlist: Settings.get('SteamWishlist')});
         }
         else {
             getWishlistFromSteam(sendResponse);
         }
+    }
+    else if (request.method == "getSettings") {
+        sendResponse({'settings': Settings});
     }
     else if (request.method == "updateGames") {
         getGamesFromSteam(sendResponse);

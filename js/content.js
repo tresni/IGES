@@ -1,4 +1,5 @@
 var parser = new DOMParser();
+var settings = {};
 var my_games_list = {};
 var my_wishlist = {};
 var my_steam_name = null;
@@ -50,9 +51,20 @@ function getUser(callback) {
     });
 }
 
+function getSettings(callback) {
+    chrome.extension.sendRequest({method: "getSettings"}, function(s) {
+        settings = s;
+        if (typeof callback == "function") {
+            callback();
+        }
+    });
+}
+
 getUser(function() {
     getWishlist(function() {
-        getGames(main);
+        getGames(function() {
+            getSettings(main);
+        });
     });
 });
 
