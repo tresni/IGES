@@ -25,6 +25,15 @@ Suggestions welcome.
 
 ## Changelog
 
+* 7 JAN 2013
+    * Reoragnized the header for easier use
+        * Profile link is gone (just click your avatar)
+        * Avatar / Points moved to the front of the list
+        * Points are just listed as a number
+        * Logout is on the far right hand side
+        * Create GA is now directly under your points total
+    * Header properly updates as you do things in QuickView
+    * Infinite Scroll now doesn't require you to go all the way to the bottom of the page
 * 6 JAN 2013
     * Fixes profile page incorrectly moving created Giveaways into Open Giveaways list
 
