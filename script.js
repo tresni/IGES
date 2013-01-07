@@ -358,7 +358,6 @@ function main() {
             $("div#iges_header").append($("table.header")).show();
         }
         else {
-            if (shouldScroll)
             $("table.header").prependTo("body");
             $("div#iges_header").hide();
         }
