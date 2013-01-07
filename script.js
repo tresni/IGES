@@ -179,6 +179,42 @@ function handleSteamLinks(doc) {
     $('a[href^="http://store.steampowered.com/app/"]', doc).attr("target", "_blank");
 }
 
+function cleanHeader(doc) {
+    var table = $("table.header", doc).find("tr:last").remove().end();
+
+    // Remove Privacy Policy link?
+    //table.find("td:nth-child(10)").remove();
+
+    // Remove the text around points, we know what they are
+    var points = table.find("td:eq(8)");
+    var match = /\[([0-9,]+)\]/.exec(points.text());
+    points.text(match[1]);
+
+    // Remove Profile entry, we'll make the user image link to profile
+    var cell = table.find("td:nth-child(5)");
+    var link = cell.find("a").text("");
+    cell.remove();
+    
+    // Move Logout to the end
+    table.find("td:nth-child(6)").detach().appendTo(table.find("tr")).find("a").text("Logout");
+
+    // Add Create GA link under points
+    cell = table.find("td:nth-child(5)");
+    var ga = cell.find("a");
+    cell.remove();
+
+    // Move profile image/points to the front
+    table.find("td:nth-child(5), td:nth-child(6)").detach().prependTo(table.find("tr"))
+        .filter(':last').append("<br>").append(ga).end() // Add create GA link under points
+        .filter(':first').css("width", 32).find('img').wrap(link); // Link image to profile
+}
+
+function updateHeader(doc) {
+    // Updated the table basedon changes in the table.
+    cleanHeader(doc);
+    $('table.header').replaceWith($('table.header', doc)).find("tr:last").remove();
+}
+
 function handleGiveawayForm(event) {
     $(this).find("button").attr("disabled", "disabled");
     $("#resp_message").remove();
@@ -200,6 +236,8 @@ function handleGiveawayForm(event) {
         var newForm = $('table:has(form[action^="/enterGA"],form[action^="/leaveGA"]) form', resp);
         newForm.submit(handleGiveawayForm);
         $(form).after(div).replaceWith(newForm);
+
+        updateHeader(resp);
     });
 }
 
@@ -312,6 +350,8 @@ function main() {
         top: 0,
         left: 0
     }).hide().appendTo("body");
+
+    cleanHeader(document);
     
     $(window).scroll(function(event) {
         if (window.pageYOffset >= 1) {
