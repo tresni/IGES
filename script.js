@@ -363,7 +363,7 @@ function main() {
             $("div#iges_header").hide();
         }
 
-        if (window.innerHeight + window.pageYOffset >= document.height && shouldScroll) {
+        if (window.innerHeight + window.pageYOffset >= (document.height - $("table:last").height()) && shouldScroll) {
             getNextPage();
         }
     });
