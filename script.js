@@ -194,14 +194,14 @@ function handleSteamLinks(doc) {
 }
 
 function cleanHeader(doc) {
-    var table = $("table.header", doc).find("tr:last").remove().end();
+    var table = $("table.header", doc);
 
     // Remove Privacy Policy link?
     //table.find("td:nth-child(10)").remove();
 
     // Remove the text around points, we know what they are
     var points = table.find("td:eq(8)");
-    var match = /\[([0-9,]+)\]/.exec(points.text());
+    var match = /([0-9,]+)/.exec(points.text());
     points.text(match[1]);
 
     // Remove Profile entry, we'll make the user image link to profile
