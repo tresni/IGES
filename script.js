@@ -6,6 +6,12 @@ var table = null;
 var page = 1;
 var shouldScroll = true;
 
+var GamesWithMultipleIds = {
+    '39530': 'Painkiller: Black Edition',
+    '3200': 'Painkiller: Black Edition',
+    'Painkiller: Black Edition': [39530, 3200]
+};
+
 function getGames(callback, forceupdate) {
     chrome.extension.sendRequest({method: (forceupdate === true) ? "updateGames" : "getGames"}, function(settings) {
         games = settings.games;
@@ -96,6 +102,14 @@ function cleanUp(doc) {
     links.each(function(){
         if (getIdFromLink(this) in my_games_list) {
             $(this).closest("td").remove();
+        }
+        if (getIdFromLink(this) in GamesWithMultipleIds) {
+            game_ids = GamesWithMultipleIds[GamesWithMultipleIds[getIdFromLink(this)]];
+            for (var x in game_ids) {
+                if (game_ids[x] in my_games_list) {
+                    $(this).closest("td").remove();
+                }
+            }
         }
     });
 }
