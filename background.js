@@ -34,7 +34,7 @@ function getGamesFromSteam(callback) {
 function requestWishlistFromSteam(callback) {
     console.log("Requesting wishlist from Steam");
     $.get(
-        "http://steamcommunity.com/id/" + settings.SteamUser + "/wishlist?xml=1",
+        "http://steamcommunity.com/id/" + settings.SteamUser + "/wishlist?xml=1" + "&cachebreaker=" + Math.random(),
         function(data) {
             games = [];
             $(".wishlistRow .gameLogo a[href^='http://steamcommunity.com/app/']", data).each(function() {
@@ -55,7 +55,7 @@ function requestWishlistFromSteam(callback) {
 function requestGamesFromSteam(callback) {
     console.log("Requesting games from Steam");
     $.get(
-        "http://steamcommunity.com/id/" + settings.SteamUser + "/games?tab=all&xml=1",
+        "http://steamcommunity.com/id/" + settings.SteamUser + "/games?tab=all&xml=1" + "&cachebreaker=" + Math.random(),
         function(data) {
             games = [];
             $("game", data).each(function() {
