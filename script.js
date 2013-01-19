@@ -101,6 +101,8 @@ function cleanUp(doc) {
 
     links.each(function(){
         if (getIdFromLink(this) in my_games_list) {
+            // TODO: Detach and store instead of removing. Will allow us to change filtering
+            // options on the fly.
             $(this).closest("td").remove();
         }
         if (getIdFromLink(this) in GamesWithMultipleIds) {
@@ -200,27 +202,21 @@ function cleanHeader(doc) {
     //table.find("td:nth-child(10)").remove();
 
     // Remove the text around points, we know what they are
-    var points = table.find("td:eq(8)");
+    var points = table.find("td:contains('GW')");
     var match = /([0-9,]+)/.exec(points.text());
     points.text(match[1]);
 
     // Remove Profile entry, we'll make the user image link to profile
-    var cell = table.find("td:nth-child(5)");
-    var link = cell.find("a").text("");
-    cell.remove();
-    
-    // Move Logout to the end
-    table.find("td:nth-child(6)").detach().appendTo(table.find("tr")).find("a").text("Logout");
+    table.find("td a[href^='/profile']:not(:has(img))").remove();
 
     // Add Create GA link under points
-    cell = table.find("td:nth-child(5)");
-    var ga = cell.find("a");
+    var cell = table.find("td:contains('GA')");
+    points.append("<br>").append(cell.find("a"));
     cell.remove();
 
     // Move profile image/points to the front
-    table.find("td:nth-child(5), td:nth-child(6)").detach().prependTo(table.find("tr"))
-        .filter(':last').append("<br>").append(ga).end() // Add create GA link under points
-        .filter(':first').css("width", 32).find('img').wrap(link); // Link image to profile
+    points.detach().prependTo(table.find("tr"));
+    table.find("td:has(a[href^='/profile'])").detach().prependTo(table.find("tr")).css("width", 32);
 }
 
 function updateHeader(doc) {
