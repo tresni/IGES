@@ -380,6 +380,8 @@ function main() {
     });
 
     if (/^\/(home|(points|players)(Most|Less)|new|coming|closed|minfeedback|maxplayers)/i.test(window.location.pathname)) {
+        // remove the link bar at the bottom, we are inifite baby!
+        $("p:has(a[href^='/home'])").remove();
         // Store the table we are about to fuck up
         table = getLinks(document).closest("table");
         cleanGameList(document);
