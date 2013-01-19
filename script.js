@@ -275,7 +275,7 @@ function quickLook(data) {
 }
 
 function quickEnter(doc) {
-    entry = $('a[href^="/GA/"]:has(b > u):not(.quick)', doc).addClass('quick');
+    entry = $('a[href^="/GA/"]:has(b > u)', doc);
 
     td = $("<td>").css({
         textAlign: "center"
