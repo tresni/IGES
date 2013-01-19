@@ -2,6 +2,7 @@ var parser = new DOMParser();
 var my_games_list = {};
 var my_wishlist = {};
 var my_steam_name = null;
+var my_points = 0;
 var table = null;
 var page = 1;
 var shouldScroll = true;
@@ -100,18 +101,27 @@ function cleanUp(doc) {
     var links = getLinks(doc);
 
     links.each(function(){
+        gameCell = $(this).closest("td");
+
         if (getIdFromLink(this) in my_games_list) {
             // TODO: Detach and store instead of removing. Will allow us to change filtering
             // options on the fly.
-            $(this).closest("td").remove();
+            gameCell.remove();
         }
         if (getIdFromLink(this) in GamesWithMultipleIds) {
             game_ids = GamesWithMultipleIds[GamesWithMultipleIds[getIdFromLink(this)]];
             for (var x in game_ids) {
                 if (game_ids[x] in my_games_list) {
-                    $(this).closest("td").remove();
+                    gameCell.remove();
                 }
             }
+        }
+        
+        points = parseInt($("td:contains('Points:'):not(:has(table)) strong", gameCell).text().replace(/[^\d.]/, ''), 10);
+        console.log(points);
+        if (points > my_points) {
+            console.log("removed");
+            gameCell.remove();
         }
     });
 }
@@ -204,6 +214,7 @@ function cleanHeader(doc) {
     // Remove the text around points, we know what they are
     var points = table.find("td:contains('GW')");
     var match = /([0-9,]+)/.exec(points.text());
+    my_points = parseInt(match[1].replace(",", ""), 10);
     points.text(match[1]);
 
     // Remove Profile entry, we'll make the user image link to profile
