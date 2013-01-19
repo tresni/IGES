@@ -320,7 +320,9 @@ function getNextPage() {
         }).append($('<i class="icon-spinner icon-spin icon-4x"></i>'));
     rearrangeTable(table, td, 4, false);
 
-    $.get("http://www.galagiveaways.com/home/" + page, function(data) {
+
+
+    $.get(window.location + "/" + page, function(data) {
         $('td.spinner').remove();
         cleanGameList(parser.parseFromString(data, "text/html"));
     });
@@ -377,7 +379,7 @@ function main() {
         }
     });
 
-    if (/^\/home/.test(window.location.pathname)) {
+    if (/^\/(home|(points|players)(Most|Less)|new|coming|closed|minfeedback|maxplayers)/i.test(window.location.pathname)) {
         // Store the table we are about to fuck up
         table = getLinks(document).closest("table");
         cleanGameList(document);
