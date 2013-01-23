@@ -44,7 +44,8 @@ function requestWishlistFromSteam(callback) {
                 });
             });
             console.log("Got a bunch of wishlist items", games.length);
-            storage.set({SteamWishlist: games});
+            settings.SteamWishlist = games;
+            storage.set(settings);
             callback({wishlist: games});
         }
     ).error(function() {
@@ -65,7 +66,8 @@ function requestGamesFromSteam(callback) {
                 });
             });
             console.log("Got a bunch of games", games.length);
-            storage.set({SteamGames: games});
+            settings.SteamGames = games;
+            storage.set(settings);
             callback({games: games});
         }
     ).error(function() {
@@ -80,12 +82,11 @@ function getSteamIdFromGala(callback) {
             if (user === null || user.length === 0) {
                 console.log("no user :(");
                 settings.SteamUser = null;
-                storage.remove("SteamUser");
             } else {
                 console.log("Steam user: " + user[1]);
-                storage.set({SteamUser: user[1]});
                 settings.SteamUser = user[1];
             }
+            storage.set(settings);
             callback({user: settings.SteamUser});
         }
     ).error(function() {
